@@ -198,9 +198,24 @@ export class Auth {
 			.insert(this._tables.passwords)
 			.values({
 				userId,
-				passwordHash
+				password: passwordHash
 			})
 			.onConflictDoNothing();
+	}
+
+	async loginEmailPassword(email: string, password: string): Promise<string> {
+		if (!email || !password) {
+			throw new Error('Invalid email or password');
+		}
+
+		const user = await this._db.query.users.findFirst({
+			where: eq(this._tables.users.email, email)
+		});
+		if (!user) {
+			throw new Error('Invalid email or password');
+		}
+
+		return this.loginPassword(user.id, password);
 	}
 
 	async loginPassword(userId: string, password: string): Promise<string> {
@@ -208,16 +223,16 @@ export class Auth {
 			where: eq(this._tables.passwords.userId, userId)
 		});
 		if (!passwordHash) {
-			throw new Error('Invalid username or password');
+			throw new Error('Invalid email or password');
 		}
-		const verified = await verify(passwordHash.passwordHash, password, {
+		const verified = await verify(passwordHash.password, password, {
 			memoryCost: 19456,
 			timeCost: 2,
 			outputLen: 32,
 			parallelism: 1
 		});
 		if (!verified) {
-			throw new Error('Invalid username or password');
+			throw new Error('Invalid email or password');
 		}
 		return userId;
 	}
