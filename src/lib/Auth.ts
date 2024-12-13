@@ -16,9 +16,9 @@ import type {
 	PublicKeyCredentialRequestOptionsJSON,
 	RegistrationResponseJSON
 } from '@simplewebauthn/types';
-import { hash, verify } from '@node-rs/argon2';
 import { generateUserId, validateEmail, validatePassword } from './utils/users.js';
 import type { tempPasskey } from './types/Passkey.js';
+import { hashPassword, verifyPassword } from './utils/security.js';
 
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
 
@@ -187,12 +187,7 @@ export class Auth {
 			throw new Error('Password already set');
 		}
 
-		const passwordHash = await hash(password, {
-			memoryCost: 19456,
-			timeCost: 2,
-			outputLen: 32,
-			parallelism: 1
-		});
+		const passwordHash = await hashPassword(password);
 
 		await this._db
 			.insert(this._tables.passwords)
@@ -225,12 +220,7 @@ export class Auth {
 		if (!passwordHash) {
 			throw new Error('Invalid email or password');
 		}
-		const verified = await verify(passwordHash.password, password, {
-			memoryCost: 19456,
-			timeCost: 2,
-			outputLen: 32,
-			parallelism: 1
-		});
+		const verified = await verifyPassword(password, passwordHash.password);
 		if (!verified) {
 			throw new Error('Invalid email or password');
 		}

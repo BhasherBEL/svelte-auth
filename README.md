@@ -115,3 +115,16 @@ const userId = await auth.verifyLoginPasskeyResponse(rid, response);
 #Optional
 await auth.initSession(cookies, userId);
 ```
+
+### Components
+
+To use the tailwind of the library, you have to edit the `tailwind.config.ts`:
+
+```
+export default {
+	content: [
+        ...
+        './node_modules/@bhasher/**/*.{html,js,svelte,ts}'
+    ],
+}
+```
